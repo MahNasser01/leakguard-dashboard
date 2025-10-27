@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockApiKeys } from "@/services/mockData";
 import { ApiKey } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ export default function ApiAccess() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>(mockApiKeys);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
+  const API_BASE = (import.meta as any).env.VITE_API_BASE || "http://localhost:8000";
 
   const handleCreateApiKey = () => {
     if (!newKeyName) {
@@ -26,18 +27,50 @@ export default function ApiAccess() {
       return;
     }
 
-    const apiKey: ApiKey = {
-      id: Date.now().toString(),
-      name: newKeyName,
-      key: `lk_${Math.random().toString(36).substr(2, 32)}`,
-      createdAt: new Date(),
-    };
-
-    setApiKeys([...apiKeys, apiKey]);
-    setNewKeyName("");
-    setIsDialogOpen(false);
-    toast.success("API key created successfully");
+    // POST to backend to create an API key. Backend will return the generated key.
+    fetch(`${API_BASE}/api/api-keys`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newKeyName }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create api key");
+        return res.json();
+      })
+      .then((data) => {
+        const created: ApiKey = {
+          id: data.id,
+          name: data.name,
+          key: data.key,
+          createdAt: new Date(data.created_at),
+          lastUsed: data.last_used ? new Date(data.last_used) : undefined,
+        };
+        setApiKeys((k) => [created, ...k]);
+        setNewKeyName("");
+        setIsDialogOpen(false);
+        toast.success("API key created successfully");
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to create API key");
+      });
   };
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/api-keys`)
+      .then((res) => res.json())
+      .then((data) => {
+        const mapped: ApiKey[] = data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          key: d.key,
+          createdAt: d.created_at ? new Date(d.created_at) : new Date(),
+          lastUsed: d.last_used ? new Date(d.last_used) : undefined,
+        }));
+        setApiKeys(mapped);
+      })
+      .catch((err) => console.error("Failed to load api keys", err));
+  }, []);
 
   const handleCopyKey = (key: string) => {
     navigator.clipboard.writeText(key);
@@ -226,7 +259,7 @@ curl https://api.leakguard.ai/v2/guard <first_request_arguments> \\
                     {apiKey.key}
                   </code>
                   <div className="text-xs text-muted-foreground">
-                    Created: {apiKey.createdAt.toLocaleDateString()}
+                    Created: {new Date(apiKey.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               ))}

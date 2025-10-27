@@ -65,3 +65,21 @@ SQLite database file: `leakguard.db` (automatically created on first run)
 ## Development
 
 The database tables are automatically created when you start the server for the first time.
+
+## Seeding & local dev
+
+For easier local development you can disable auth and seed the DB with mock data:
+
+1. Disable auth (allow requests without Clerk tokens):
+
+```bash
+export DISABLE_AUTH=true
+```
+
+2. Run the seed script from the `backend` directory to populate the DB with sample projects, policies, API keys and logs:
+
+```bash
+python seed.py
+```
+
+The script will print the generated API key so you can copy it for testing.

@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, DateTime, Integer, Text, JSON
+from sqlalchemy import Column, String, DateTime, Integer, Text, JSON, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from database import Base
 import uuid
 
@@ -30,6 +31,9 @@ class ApiKey(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, nullable=False)
     key = Column(String, unique=True, nullable=False)
+    # optional link to a Project
+    project_id = Column(String, ForeignKey("projects.id"), nullable=True)
+    project = relationship("Project", backref="api_keys")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_used = Column(DateTime(timezone=True), nullable=True)
 

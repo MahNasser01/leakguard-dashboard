@@ -73,8 +73,9 @@ def get_api_key(db: Session, key_id: str) -> Optional[models.ApiKey]:
     return db.query(models.ApiKey).filter(models.ApiKey.id == key_id).first()
 
 def create_api_key(db: Session, api_key: schemas.ApiKeyCreate) -> models.ApiKey:
+    """Create an API key. Accepts optional project_id to link key to a project."""
     generated_key = f"lk_{secrets.token_urlsafe(32)}"
-    db_api_key = models.ApiKey(name=api_key.name, key=generated_key)
+    db_api_key = models.ApiKey(name=api_key.name, key=generated_key, project_id=getattr(api_key, 'project_id', None))
     db.add(db_api_key)
     db.commit()
     db.refresh(db_api_key)

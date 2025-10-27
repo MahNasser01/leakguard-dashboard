@@ -8,7 +8,8 @@ from functools import lru_cache
 
 load_dotenv()
 
-security = HTTPBearer()
+# allow missing credentials to be handled in our verify_token (so we can bypass in dev)
+security = HTTPBearer(auto_error=False)
 
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 CLERK_JWKS_URL = "https://touched-raptor-54.clerk.accounts.dev/.well-known/jwks.json"
@@ -20,8 +21,20 @@ def get_jwks():
     return response.json()
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Security(security)):
-    """Verify Clerk JWT token"""
+    """Verify Clerk JWT token.
+
+    If DISABLE_AUTH=true in the environment, this will return a dummy payload to allow
+    local development without Clerk tokens. When auto_error=False is set on the
+    HTTPBearer, `credentials` may be None if no Authorization header is provided.
+    """
+    # Development bypass
+    if os.getenv("DISABLE_AUTH", "false").lower() == "true":
+        return {"sub": "dev"}
+
     try:
+        if credentials is None:
+            # No credentials provided
+            raise HTTPException(status_code=401, detail="Not authenticated")
         token = credentials.credentials
         
         # Decode without verification first to get the kid

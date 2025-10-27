@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { mockProjects } from "@/services/mockData";
+import { useState, useEffect } from "react";
 import { Project } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +24,8 @@ import { Plus, Search, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const API_BASE = (import.meta as any).env.VITE_API_BASE || "http://localhost:8000";
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newProject, setNewProject] = useState({
@@ -44,20 +44,61 @@ export default function Projects() {
       return;
     }
 
-    const project: Project = {
-      id: Date.now().toString(),
+    const payload = {
       name: newProject.name,
-      projectId: `project-${Math.random().toString(36).substr(2, 9)}`,
+      project_id: `project-${Math.random().toString(36).slice(2, 11)}`,
       policy: "LeakGuard Default Policy",
-      metadata: "-",
-      createdAt: new Date(),
+      project_metadata: "-",
     };
 
-    setProjects([...projects, project]);
-    setNewProject({ name: "", application: "", model: "" });
-    setIsDialogOpen(false);
-    toast.success("Project created successfully");
+  fetch(`${API_BASE}/api/projects`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create project");
+        return res.json();
+      })
+      .then((data) => {
+        const created: Project = {
+          id: data.id,
+          name: data.name,
+          projectId: data.project_id || data.projectId,
+          policy: data.policy,
+          metadata: data.project_metadata || data.metadata || "-",
+          createdAt: new Date(data.created_at),
+        };
+        setProjects((p) => [created, ...p]);
+        setNewProject({ name: "", application: "", model: "" });
+        setIsDialogOpen(false);
+        toast.success("Project created successfully");
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to create project");
+      });
   };
+
+  useEffect(() => {
+    // fetch projects from backend
+  fetch(`${API_BASE}/api/projects`)
+      .then((res) => res.json())
+      .then((data) => {
+        const mapped: Project[] = data.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          projectId: d.project_id || d.projectId,
+          policy: d.policy,
+          metadata: d.project_metadata || d.metadata || "-",
+          createdAt: d.created_at ? new Date(d.created_at) : new Date(),
+        }));
+        setProjects(mapped);
+      })
+      .catch((err) => {
+        console.error("Failed to load projects", err);
+      });
+  }, []);
 
   const handleCopyProjectId = (projectId: string) => {
     navigator.clipboard.writeText(projectId);

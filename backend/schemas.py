@@ -41,11 +41,14 @@ class ApiKeyBase(BaseModel):
 
 class ApiKeyCreate(BaseModel):
     name: str
+    project_id: Optional[str] = None
+
 
 class ApiKey(ApiKeyBase):
     id: str
     created_at: datetime
     last_used: Optional[datetime] = None
+    project_id: Optional[str] = None
 
     class Config:
         from_attributes = True
