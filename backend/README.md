@@ -18,7 +18,13 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. **Run the server**
+4. **Set up environment variables**
+Create a `.env` file in the backend directory:
+```bash
+CLERK_SECRET_KEY=sk_test_your_clerk_secret_key
+```
+
+5. **Run the server**
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
