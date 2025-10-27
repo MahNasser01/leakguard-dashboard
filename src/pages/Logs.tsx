@@ -109,7 +109,7 @@ export default function Logs() {
               <TableHead>Policy</TableHead>
               <TableHead>Request ID</TableHead>
               <TableHead>Latency</TableHead>
-              <TableHead>Lakera Region</TableHead>
+              <TableHead>LeakGuard Region</TableHead>
               <TableHead>Metadata tags</TableHead>
             </TableRow>
           </TableHeader>

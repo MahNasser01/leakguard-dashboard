@@ -67,7 +67,7 @@ export default function Policies() {
           }`}
           onClick={() => setActiveTab("catalog")}
         >
-          Lakera Policy Catalog
+          LeakGuard Policy Catalog
         </button>
       </div>
 

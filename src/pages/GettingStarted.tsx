@@ -8,7 +8,7 @@ export default function GettingStarted() {
       <div>
         <h1 className="text-3xl font-semibold text-foreground">Getting Started</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Welcome to Lakera Guard. Get started with protecting your AI applications.
+          Welcome to LeakGuard. Get started with protecting your AI applications.
         </p>
       </div>
 
@@ -17,7 +17,7 @@ export default function GettingStarted() {
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold mb-2">Quick Start Guide</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Learn how to set up Lakera Guard in minutes and protect your AI applications from
+              Learn how to set up LeakGuard in minutes and protect your AI applications from
               prompt injection attacks.
             </p>
             <Button variant="outline">
@@ -31,7 +31,7 @@ export default function GettingStarted() {
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold mb-2">API Integration</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Integrate Lakera Guard API into your application with our comprehensive guides and
+              Integrate LeakGuard API into your application with our comprehensive guides and
               examples.
             </p>
             <Button variant="outline">
@@ -45,7 +45,7 @@ export default function GettingStarted() {
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold mb-2">Create Your First Project</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Set up a project to manage how Lakera Guard protects your specific application or
+              Set up a project to manage how LeakGuard protects your specific application or
               environment.
             </p>
             <Button>Go to Projects</Button>

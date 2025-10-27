@@ -11,7 +11,7 @@ from auth import verify_token
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Lakera API", version="1.0.0")
+app = FastAPI(title="LeakGuard API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,7 +23,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Lakera API is running"}
+    return {"message": "LeakGuard API is running"}
 
 # Projects endpoints
 @app.get("/api/projects", response_model=List[schemas.Project])

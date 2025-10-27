@@ -1,4 +1,4 @@
-# Lakera Backend API
+# LeakGuard Backend API
 
 FastAPI backend with SQLite database and SQLAlchemy ORM.
 
@@ -60,7 +60,7 @@ API Documentation: `http://localhost:8000/docs`
 
 ## Database
 
-SQLite database file: `lakera.db` (automatically created on first run)
+SQLite database file: `leakguard.db` (automatically created on first run)
 
 ## Development
 

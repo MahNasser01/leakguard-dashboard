@@ -5,7 +5,7 @@ export const mockProjects: Project[] = [
     id: "1",
     name: "First Project",
     projectId: "project-3043777887",
-    policy: "Lakera Default Policy",
+    policy: "LeakGuard Default Policy",
     metadata: "-",
     createdAt: new Date("2024-01-15"),
   },
@@ -14,8 +14,8 @@ export const mockProjects: Project[] = [
 export const mockPolicies: Policy[] = [
   {
     id: "1",
-    name: "Lakera Default Policy",
-    policyId: "policy-lakera-default",
+    name: "LeakGuard Default Policy",
+    policyId: "policy-LeakGuard-default",
     guardrails: ["prompt-injection", "pii", "topics", "secrets"],
     sensitivity: "L4",
     projects: "First Project",
@@ -24,7 +24,7 @@ export const mockPolicies: Policy[] = [
   {
     id: "2",
     name: "Public-facing Application",
-    policyId: "policy-lakera-public",
+    policyId: "policy-LeakGuard-public",
     guardrails: ["prompt-injection", "pii"],
     sensitivity: "L2",
     projects: "-",
@@ -33,7 +33,7 @@ export const mockPolicies: Policy[] = [
   {
     id: "3",
     name: "Internal-facing Application",
-    policyId: "policy-lakera-internal",
+    policyId: "policy-LeakGuard-internal",
     guardrails: ["prompt-injection", "topics", "secrets"],
     sensitivity: "L1",
     projects: "-",
@@ -42,7 +42,7 @@ export const mockPolicies: Policy[] = [
   {
     id: "4",
     name: "Prompt Defense Only",
-    policyId: "policy-lakera-prompt-only",
+    policyId: "policy-LeakGuard-prompt-only",
     guardrails: ["prompt-injection"],
     sensitivity: "L2",
     projects: "-",
@@ -51,7 +51,7 @@ export const mockPolicies: Policy[] = [
   {
     id: "5",
     name: "Content Safety",
-    policyId: "policy-lakera-content-safety",
+    policyId: "policy-LeakGuard-content-safety",
     guardrails: ["prompt-injection", "pii"],
     sensitivity: "L2",
     projects: "-",

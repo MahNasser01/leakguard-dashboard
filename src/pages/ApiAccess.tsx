@@ -63,11 +63,11 @@ export default function ApiAccess() {
           <p className="text-sm text-muted-foreground">
             You can use the{" "}
             <a href="#" className="text-accent hover:underline">
-              Lakera Guard API
+              LeakGuard API
             </a>{" "}
             by submitting a POST request to{" "}
             <code className="rounded bg-muted px-1 py-0.5 text-xs">
-              https://api.lakera.ai/v2/guard
+              https://api.leakguard.ai/v2/guard
             </code>
             . You'll need to pass an access key along with your request. You can generate your
             access key on the right, copy and paste that into the example below, and execute your
@@ -75,7 +75,7 @@ export default function ApiAccess() {
           </p>
           <p className="text-sm text-muted-foreground">
             Once you have your access key, you're ready to make your first request. As a "hello
-            world", let's run Lakera Guard on a harmless input.
+            world", let's run LeakGuard on a harmless input.
           </p>
 
           <div className="space-y-2">
@@ -88,10 +88,10 @@ export default function ApiAccess() {
             </div>
             <div className="relative">
               <pre className="rounded-lg bg-muted p-4 text-xs overflow-x-auto">
-                <code>{`export LAKERA_GUARD_API_KEY=<your key>
-curl https://api.lakera.ai/v2/guard \\
+                <code>{`export LEAKGUARD_API_KEY=<your key>
+curl https://api.leakguard.ai/v2/guard \\
   -X POST \\
-  -H "Authorization: Bearer $LAKERA_GUARD_API_KEY" \\
+  -H "Authorization: Bearer $LeakGUARD_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{ "messages": [{"content": "Your content goes here", "role": "user"}]}'`}</code>
               </pre>
@@ -130,9 +130,9 @@ curl https://api.lakera.ai/v2/guard \\
             <h3 className="font-medium">Multiple requests with persistent connection:</h3>
             <div className="relative">
               <pre className="rounded-lg bg-muted p-4 text-xs overflow-x-auto">
-                <code>{`export LAKERA_GUARD_API_KEY=<your key>
-curl https://api.lakera.ai/v2/guard <first_request_arguments> \\
-  -: https://api.lakera.ai/v2/guard <second_request_arguments>`}</code>
+                <code>{`export LEAKGUARD_API_KEY=<your key>
+curl https://api.leakguard.ai/v2/guard <first_request_arguments> \\
+  -: https://api.leakguard.ai/v2/guard <second_request_arguments>`}</code>
               </pre>
               <Button
                 variant="ghost"
@@ -150,7 +150,7 @@ curl https://api.lakera.ai/v2/guard <first_request_arguments> \\
           <div className="space-y-2">
             <h3 className="font-medium">Once you've made your first request:</h3>
             <p className="text-sm text-muted-foreground">
-              Learn more about how prompt injections can affect LLMs, and how Lakera Guard protects
+              Learn more about how prompt injections can affect LLMs, and how LeakGuard protects
               you against these threats, by following our{" "}
               <a href="#" className="text-accent hover:underline inline-flex items-center gap-1">
                 prompt injection tutorial
@@ -175,7 +175,7 @@ curl https://api.lakera.ai/v2/guard <first_request_arguments> \\
                 <DialogHeader>
                   <DialogTitle>Create new API key</DialogTitle>
                   <DialogDescription>
-                    Create a new API key to access the Lakera Guard API.
+                    Create a new API key to access the LeakGuard API.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">

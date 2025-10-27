@@ -48,7 +48,7 @@ export default function Projects() {
       id: Date.now().toString(),
       name: newProject.name,
       projectId: `project-${Math.random().toString(36).substr(2, 9)}`,
-      policy: "Lakera Default Policy",
+      policy: "LeakGuard Default Policy",
       metadata: "-",
       createdAt: new Date(),
     };
@@ -92,7 +92,7 @@ export default function Projects() {
             <DialogHeader>
               <DialogTitle>Create project</DialogTitle>
               <DialogDescription>
-                Set up a project to manage how Lakera Guard protects a specific application,
+                Set up a project to manage how LeakGuard protects a specific application,
                 environment, or component.
               </DialogDescription>
             </DialogHeader>
