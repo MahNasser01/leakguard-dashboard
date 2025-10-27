@@ -4,7 +4,6 @@ import models
 import schemas
 import secrets
 
-# Projects CRUD
 def get_projects(db: Session, skip: int = 0, limit: int = 100) -> List[models.Project]:
     return db.query(models.Project).offset(skip).limit(limit).all()
 

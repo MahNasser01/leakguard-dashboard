@@ -6,7 +6,7 @@ class ProjectBase(BaseModel):
     name: str
     project_id: str
     policy: str
-    metadata: Optional[str] = None
+    project_metadata: Optional[str] = None
 
 class ProjectCreate(ProjectBase):
     pass
@@ -58,7 +58,7 @@ class LogEntryBase(BaseModel):
     request_id: str
     latency: int
     region: str
-    metadata: Optional[str] = None
+    log_entry_metadata: Optional[str] = None
 
 class LogEntryCreate(LogEntryBase):
     pass

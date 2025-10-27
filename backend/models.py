@@ -10,7 +10,7 @@ class Project(Base):
     name = Column(String, nullable=False)
     project_id = Column(String, unique=True, nullable=False)
     policy = Column(String, nullable=False)
-    metadata = Column(String)
+    project_metadata = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class Policy(Base):
@@ -45,4 +45,4 @@ class LogEntry(Base):
     request_id = Column(String, nullable=False)
     latency = Column(Integer, nullable=False)
     region = Column(String, nullable=False)
-    metadata = Column(String)
+    log_entry_metadata = Column(String)
