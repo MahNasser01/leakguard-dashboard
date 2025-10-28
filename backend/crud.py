@@ -4,6 +4,63 @@ import models
 import schemas
 import secrets
 
+# --- Mock Data and Logic for Guard Function ---
+THREAT_TYPES = [
+    {
+        "type": "Prompt Attack",
+        "confidence": "Confident",
+        "description": "Manipulative instructions intended to override the model's intended behavior, including prompt injections and jailbreak attempts.",
+    },
+    {
+        "type": "Data Leakage",
+        "confidence": "Unlikely",
+        "description": "Leakage of sensitive data including Personally Identifiable Information (PII), such as names, email addresses, and credit card numbers.",
+    },
+    {
+        "type": "Content Violation",
+        "confidence": "Unlikely",
+        "description": "Harmful or inappropriate material, such as hate speech, explicit language, or violence.",
+    },
+    {
+        "type": "Unknown Links",
+        "confidence": "Unlikely",
+        "description": "Potential malicious link as the URL is not among the top 1 million most popular domains or included in a custom allowlist.",
+    },
+]
+
+def run_leakguard_check(prompt: str) -> List[dict]:
+    """
+    Simulates the core LeakGuard detection engine logic.
+    (In a real application, this would call an external AI/ML model.)
+    """
+    new_results = []
+    for threat in THREAT_TYPES:
+        detected = False
+        confidence_value = 10 
+        
+        # Simulated threat detection logic:
+        if threat["type"] == 'Data Leakage' and '374245455400128' in prompt:
+            detected = True
+            confidence_value = 95
+        elif threat["type"] == 'Prompt Attack' and 'developer instructions' in prompt:
+            detected = True
+            confidence_value = 90
+        elif threat["type"] == 'Content Violation' and 'mushrooms' in prompt:
+            detected = True
+            confidence_value = 85
+            
+        new_results.append({
+                **threat,
+                "detected": detected,
+                "confidenceValue": confidence_value,
+        })
+
+    return new_results
+# ------------------------------------------------------------------
+# -------------------- Existing CRUD Functions ---------------------
+# ------------------------------------------------------------------
+
+# Projects CRUD
 def get_projects(db: Session, skip: int = 0, limit: int = 100) -> List[models.Project]:
     return db.query(models.Project).offset(skip).limit(limit).all()
 
