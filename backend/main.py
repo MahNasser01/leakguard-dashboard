@@ -25,6 +25,18 @@ app.add_middleware(
 def read_root():
     return {"message": "LeakGuard API is running"}
 
+@app.post("/api/guard/run", response_model=List[schemas.GuardResult])
+def run_guard_api(
+    request: schemas.GuardRequest,
+    # current_user: dict = Depends(verify_token) # Commented out for simple playground demo
+):
+    """
+    Receives a prompt and calls the guard check logic from crud.py.
+    """
+    # Calls the logic function located in crud.py
+    results = crud.run_leakguard_check(request.prompt)
+    return results
+
 # Projects endpoints
 @app.get("/api/projects", response_model=List[schemas.Project])
 def list_projects(

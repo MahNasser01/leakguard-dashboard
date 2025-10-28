@@ -72,3 +72,17 @@ class LogEntry(LogEntryBase):
 
     class Config:
         from_attributes = True
+
+
+class GuardResult(BaseModel):
+    """Schema for the result of a single threat detection."""
+    type: str
+    confidence: str
+    description: str
+    detected: bool
+    confidenceValue: int
+
+class GuardRequest(BaseModel):
+    """Schema for the input prompt."""
+    prompt: str
+
