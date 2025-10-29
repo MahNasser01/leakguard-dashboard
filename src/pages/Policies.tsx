@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { mockPolicies } from "@/services/mockData";
 import { Policy } from "@/types";
@@ -12,9 +12,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Copy, Pencil } from "lucide-react";
+import { Plus, Search, Copy, Pencil, Shield, FileText, Users, Link, ArrowLeft, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+
+// --- START: New Custom Icon Styling Classes ---
+const ICON_STYLES_LIST = {
+  "prompt-injection": "h-8 w-8 rounded-lg flex items-center justify-center bg-orange-100/50 backdrop-blur-sm border border-white/20 shadow-lg shadow-orange-500/30",
+  "topics": "h-8 w-8 rounded-lg flex items-center justify-center bg-blue-100/50 backdrop-blur-sm border border-white/20 shadow-lg shadow-blue-500/30",
+  "pii": "h-8 w-8 rounded-lg flex items-center justify-center bg-purple-100/50 backdrop-blur-sm border border-white/20 shadow-lg shadow-purple-500/30",
+  "secrets": "h-8 w-8 rounded-lg flex items-center justify-center bg-gray-200/50 backdrop-blur-sm border border-white/20 shadow-lg shadow-gray-500/30",
+};
+
+const ICON_COLORS_LIST = {
+  "prompt-injection": "h-4 w-4 text-orange-600 dark:text-orange-500",
+  "topics": "h-4 w-4 text-blue-600 dark:text-blue-500",
+  "pii": "h-4 w-4 text-purple-600 dark:text-purple-500",
+  "secrets": "h-4 w-4 text-gray-700 dark:text-gray-300",
+}
+// --- END: New Custom Icon Styling Classes ---
+
+// Define constants for pagination
+const DEFAULT_ITEMS_PER_PAGE = 25;
+const PAGE_OPTIONS = [10, 25, 50, 100];
+
 
 export default function Policies() {
   const navigate = useNavigate();
@@ -22,20 +43,101 @@ export default function Policies() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const filteredPolicies = policies.filter((policy) => {
-    const matchesSearch = policy.name.toLowerCase().includes(searchTerm.toLowerCase());
-    if (!matchesSearch) return false;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
 
-    if (activeTab === "all") return true;
-    if (activeTab === "your") return policy.isUserAdded === true;
-    if (activeTab === "catalog") return policy.isUserAdded === false;
-    return true;
-  });
+  const filteredPolicies = useMemo(() => {
+    
+    const result = policies.filter((policy) => {
+      const matchesSearch = policy.name.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!matchesSearch) return false;
+
+      if (activeTab === "all") return true;
+      if (activeTab === "your") return policy.isUserAdded === true;
+      if (activeTab === "catalog") return policy.isUserAdded === false;
+      return true;
+    });
+
+    if (result.length > 0 && currentPage > Math.ceil(result.length / itemsPerPage)) {
+        setCurrentPage(1);
+    } else if (result.length === 0) {
+        setCurrentPage(1);
+    }
+    
+    return result;
+  }, [policies, searchTerm, activeTab, itemsPerPage, currentPage]);
+  
+  const totalItems = filteredPolicies.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const paginatedPolicies = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredPolicies.slice(startIndex, endIndex);
+  }, [filteredPolicies, currentPage, itemsPerPage]);
+  
+  const startItemIndex = Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
+  const endItemIndex = Math.min(currentPage * itemsPerPage, totalItems);
+
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const goToPrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
 
   const handleCopyPolicyId = (policyId: string) => {
     navigator.clipboard.writeText(policyId);
     toast.success("Policy ID copied to clipboard");
   };
+
+  const getGuardrailIcon = (guardrailName: string) => {
+    switch (guardrailName.toLowerCase()) {
+      case "prompt-injection":
+        return Shield;
+      case "topics":
+        return FileText;
+      case "pii":
+        return Users;
+      case "secrets":
+        return Link;
+      default:
+        return null;
+    }
+  };
+
+  // --- NEW: LLevelIndicator Component ---
+  const LLevelIndicator = ({ level }: { level: string }) => {
+    const levelNumber = parseInt(level.replace("L", ""));
+    return (
+      <div className="flex items-center gap-1 text-sm font-semibold">
+        <div className="flex h-4 gap-0.5">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className={`w-1 ${
+                i <= levelNumber
+                  ? i <= 2
+                    ? "bg-orange-500" // L1, L2
+                    : i === 3
+                    ? "bg-orange-600" // L3
+                    : "bg-red-500" // L4
+                  : "bg-gray-300 dark:bg-gray-700" // Inactive bars
+              }`}
+            />
+          ))}
+        </div>
+        <span className="ml-1 text-foreground">{level}</span>
+      </div>
+    );
+  };
+  // --- END: NEW LLevelIndicator Component ---
 
   return (
     <div className="space-y-6">
@@ -97,7 +199,7 @@ export default function Policies() {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        {filteredPolicies.length} policies
+        {totalItems} policies
       </div>
 
       <div className="rounded-lg border bg-card">
@@ -114,7 +216,7 @@ export default function Policies() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPolicies.map((policy) => (
+            {paginatedPolicies.map((policy) => (
               <TableRow key={policy.id}>
                 <TableCell className="font-medium text-accent">
                   {policy.name}
@@ -133,19 +235,36 @@ export default function Policies() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {policy.guardrails.map((guardrail) => (
-                      <Badge key={guardrail} variant="secondary" className="text-xs">
-                        {guardrail}
-                      </Badge>
-                    ))}
+                  <div className="flex flex-wrap gap-2">
+                    {policy.guardrails.map((guardrail) => {
+                      const IconComponent = getGuardrailIcon(guardrail);
+                      const iconBgClass = ICON_STYLES_LIST[guardrail.toLowerCase() as keyof typeof ICON_STYLES_LIST];
+                      const iconColorClass = ICON_COLORS_LIST[guardrail.toLowerCase() as keyof typeof ICON_COLORS_LIST];
+
+                      if (!IconComponent || !iconBgClass || !iconColorClass) {
+                        return (
+                          <Badge key={guardrail} variant="secondary" className="text-xs">
+                            {guardrail}
+                          </Badge>
+                        );
+                      }
+
+                      return (
+                        <div 
+                          key={guardrail}
+                          className={`h-8 w-8 rounded-lg flex items-center justify-center ${iconBgClass}`}
+                        >
+                          <IconComponent className={iconColorClass} />
+                        </div>
+                      );
+                    })}
                   </div>
                 </TableCell>
+                {/* --- UPDATED: Use LLevelIndicator Component --- */}
                 <TableCell>
-                  <Badge variant="outline" className="font-semibold">
-                    {policy.sensitivity}
-                  </Badge>
+                  <LLevelIndicator level={policy.sensitivity} />
                 </TableCell>
+                {/* --- END UPDATED --- */}
                 <TableCell className="text-muted-foreground">{policy.projects}</TableCell>
                 <TableCell className="text-muted-foreground">
                   Invalid date
@@ -166,18 +285,55 @@ export default function Policies() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing 1 to 5
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">Requests per page</span>
-          <select className="rounded-md border border-input bg-background px-3 py-1 text-sm">
-            <option>25</option>
-            <option>50</option>
-            <option>100</option>
-          </select>
-        </div>
+      <div className="flex items-center justify-between py-4">
+            
+          <div className="text-sm text-muted-foreground">
+            {totalItems === 0
+              ? "No policies found"
+              : `Showing ${startItemIndex} to ${endItemIndex} of ${totalItems}`}
+          </div>
+            
+          <div className="flex items-center rounded-lg border mx-auto"> 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToPrevPage}
+              disabled={currentPage === 1}
+              className="h-8 rounded-r-none px-3"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back
+            </Button>
+            <span className="px-4 text-sm font-medium border-l border-r h-8 flex items-center">
+              {currentPage}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages || totalItems === 0}
+              className="h-8 rounded-l-none px-3"
+            >
+              Next
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+            
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Requests per page</span>
+            <select
+              className="rounded-md border border-input bg-background px-3 py-1 text-sm"
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+            >
+              {PAGE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+
       </div>
     </div>
   );
