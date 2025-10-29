@@ -24,7 +24,7 @@ const templates: PolicyTemplate[] = [
     name: "Lakera Default Policy",
     description: "Applies the strictest security measures, ensuring full protection at the highest sensitivity.",
     level: "L4",
-    guardrails: ["Prompt Defense", "Content Moderation", "Data Leakage Prevention", "Unknown Links"],
+    guardrails: ["prompt-injection", "pii", "topics", "secrets"],
     icons: ["prompt", "content", "data", "link"],
   },
   {
@@ -32,7 +32,7 @@ const templates: PolicyTemplate[] = [
     name: "Public-facing Application",
     description: "Optimized for public-facing AI tools, balancing security and user experience.",
     level: "L2",
-    guardrails: ["Prompt Defense", "Content Moderation", "Data Leakage Prevention", "Unknown Links"],
+    guardrails: ["prompt-injection", "pii", "topics", "secrets"],
     icons: ["prompt", "content", "data", "link"],
   },
   {
@@ -40,7 +40,7 @@ const templates: PolicyTemplate[] = [
     name: "Internal-facing Application",
     description: "A lighter policy for internal AI tools, reducing unnecessary flagging while maintaining security.",
     level: "L1",
-    guardrails: ["Prompt Defense", "Data Leakage Prevention", "Unknown Links"],
+    guardrails: ["prompt-injection", "pii", "topics", "secrets"],
     icons: ["prompt", "data", "link"],
   },
   {
@@ -48,7 +48,7 @@ const templates: PolicyTemplate[] = [
     name: "Prompt Defense Only",
     description: "A policy focused exclusively on preventing prompt-based attacks and ensuring the integrity of AI-generated responses.",
     level: "L2",
-    guardrails: ["Prompt Defense"],
+    guardrails: ["prompt-injection", "pii", "topics", "secrets"],
     icons: ["prompt"],
   },
 ];

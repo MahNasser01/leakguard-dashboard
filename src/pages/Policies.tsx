@@ -1,5 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { mockPolicies } from "@/services/mockData";
 import { Policy } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Copy, Pencil, Shield, FileText, Users, Link, ArrowLeft, ArrowRight } from "lucide-react";
+import { Plus, Search, Copy, Pencil, Shield, FileText, Users, ShieldCheck, ArrowLeft, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useApi } from "@/services/api";
@@ -47,8 +48,36 @@ export default function Policies() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(DEFAULT_ITEMS_PER_PAGE);
 
-  const filteredPolicies = useMemo(() => {
 
+    useEffect(() => {
+    let isMounted = true;
+    policiesApi
+      .list()
+      .then((data) => {
+        if (!isMounted) return;
+        const mapped: Policy[] = (data || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          policyId: p.policy_id,
+          guardrails: p.guardrails || [],
+          sensitivity: p.sensitivity,
+          projects: p.projects || "-",
+          isUserAdded: Boolean(p.is_user_added),
+          lastEdited: p.last_edited ? new Date(p.last_edited) : new Date(0),
+        }));
+        setPolicies(mapped);
+      })
+      .catch(() => {
+        toast.error("Failed to fetch policies");
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+
+  const filteredPolicies = useMemo(() => {
+    
     const result = policies.filter((policy) => {
       const matchesSearch = policy.name.toLowerCase().includes(searchTerm.toLowerCase());
       if (!matchesSearch) return false;
@@ -64,10 +93,10 @@ export default function Policies() {
     } else if (result.length === 0) {
         setCurrentPage(1);
     }
-
+    
     return result;
   }, [policies, searchTerm, activeTab, itemsPerPage, currentPage]);
-
+  
   const totalItems = filteredPolicies.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -76,7 +105,7 @@ export default function Policies() {
     const endIndex = startIndex + itemsPerPage;
     return filteredPolicies.slice(startIndex, endIndex);
   }, [filteredPolicies, currentPage, itemsPerPage]);
-
+  
   const startItemIndex = Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
   const endItemIndex = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -107,7 +136,7 @@ export default function Policies() {
       case "pii":
         return Users;
       case "secrets":
-        return Link;
+        return ShieldCheck;
       default:
         return null;
     }
@@ -251,7 +280,7 @@ export default function Policies() {
                       }
 
                       return (
-                        <div
+                        <div 
                           key={guardrail}
                           className={`h-8 w-8 rounded-lg flex items-center justify-center ${iconBgClass}`}
                         >
@@ -261,14 +290,14 @@ export default function Policies() {
                     })}
                   </div>
                 </TableCell>
+                {/* --- UPDATED: Use LLevelIndicator Component --- */}
                 <TableCell>
                   <LLevelIndicator level={policy.sensitivity} />
                 </TableCell>
+                {/* --- END UPDATED --- */}
                 <TableCell className="text-muted-foreground">{policy.projects}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {policy.lastEdited && !isNaN(policy.lastEdited.getTime())
-                    ? policy.lastEdited.toLocaleDateString()
-                    : "-"}
+                  Invalid date
                 </TableCell>
                 <TableCell>
                   <Button
@@ -287,14 +316,14 @@ export default function Policies() {
       </div>
 
       <div className="flex items-center justify-between py-4">
-
+            
           <div className="text-sm text-muted-foreground">
             {totalItems === 0
               ? "No policies found"
               : `Showing ${startItemIndex} to ${endItemIndex} of ${totalItems}`}
           </div>
-
-          <div className="flex items-center rounded-lg border mx-auto">
+            
+          <div className="flex items-center rounded-lg border mx-auto"> 
             <Button
               variant="ghost"
               size="sm"
@@ -319,7 +348,7 @@ export default function Policies() {
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
-
+            
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Requests per page</span>
             <select
