@@ -17,7 +17,6 @@ import ApiAccess from "./pages/ApiAccess";
 import Pricing from "./pages/Pricing";
 import Settings from "./pages/Settings";
 import Documentation from "./pages/Documentation";
-import Account from "./pages/Account";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
@@ -58,7 +57,6 @@ const App = () => (
           <Route path="/playground" element={<ProtectedRoute><DashboardLayout><Playground /></DashboardLayout></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
           <Route path="/documentation" element={<ProtectedRoute><DashboardLayout><Documentation /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/account" element={<ProtectedRoute><DashboardLayout><Account /></DashboardLayout></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

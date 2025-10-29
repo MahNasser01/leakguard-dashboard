@@ -10,10 +10,10 @@ import {
   DollarSign,
   Settings,
   BookOpen,
-  User,
 } from "lucide-react";
 import {
   Sidebar,
+  SidebarHeader,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
@@ -38,7 +38,6 @@ const mainItems = [
 
 const footerItems = [
   { title: "Documentation", url: "/documentation", icon: BookOpen },
-  { title: "Account", url: "/account", icon: User },
 ];
 
 export function AppSidebar() {
@@ -51,6 +50,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={state === "collapsed" ? "w-14" : "w-60"} collapsible="icon">
+      <SidebarHeader>
+        <NavLink to="/" className="flex items-center justify-center h-10">
+          <Shield className="h-5 w-5" />
+        </NavLink>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
