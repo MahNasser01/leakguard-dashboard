@@ -54,6 +54,28 @@ export const policyApi = {
     return response.json();
   },
 
+  async get(policyId: string, getToken: () => Promise<string | null>) {
+    const response = await fetch(`${API_BASE_URL}/api/policies/${policyId}`, {
+      headers: await getAuthHeaders(getToken),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch policy: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  async update(policyId: string, data: PolicyCreateData, getToken: () => Promise<string | null>) {
+    const response = await fetch(`${API_BASE_URL}/api/policies/${policyId}`, {
+      method: "PUT",
+      headers: await getAuthHeaders(getToken),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to update policy: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
   async delete(policyId: string, getToken: () => Promise<string | null>) {
     const response = await fetch(`${API_BASE_URL}/api/policies/${policyId}`, {
       method: "DELETE",
@@ -133,6 +155,8 @@ export function useApi() {
     policies: {
       create: (data: PolicyCreateData) => policyApi.create(data, getToken),
       list: () => policyApi.list(getToken),
+      get: (id: string) => policyApi.get(id, getToken),
+      update: (id: string, data: PolicyCreateData) => policyApi.update(id, data, getToken),
       delete: (id: string) => policyApi.delete(id, getToken),
     },
     projects: {

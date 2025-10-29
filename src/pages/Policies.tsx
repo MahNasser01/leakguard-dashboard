@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Search, Copy } from "lucide-react";
+import { Plus, Search, Copy, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
@@ -104,6 +104,7 @@ export default function Policies() {
               <TableHead>Sensitivity</TableHead>
               <TableHead>Projects</TableHead>
               <TableHead>Last edited</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -142,6 +143,16 @@ export default function Policies() {
                 <TableCell className="text-muted-foreground">{policy.projects}</TableCell>
                 <TableCell className="text-muted-foreground">
                   Invalid date
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/policies/edit/${policy.id}`)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

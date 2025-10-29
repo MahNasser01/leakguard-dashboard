@@ -34,7 +34,20 @@ const App = () => (
           <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
           <Route path="/projects" element={<ProtectedRoute><DashboardLayout><Projects /></DashboardLayout></ProtectedRoute>} />
           <Route path="/policies" element={<ProtectedRoute><DashboardLayout><Policies /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/policies/create" element={<ProtectedRoute><DashboardLayout><PolicyCreate /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/policies/create" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <PolicyCreate />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/policies/edit/:policyId" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <PolicyCreate />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/api-access" element={<ProtectedRoute><DashboardLayout><ApiAccess /></DashboardLayout></ProtectedRoute>} />
           <Route path="/logs" element={<ProtectedRoute><DashboardLayout><Logs /></DashboardLayout></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />

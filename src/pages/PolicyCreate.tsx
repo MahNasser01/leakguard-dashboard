@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,6 +83,7 @@ const sensitivityLevels = [
 
 export default function PolicyCreate() {
   const navigate = useNavigate();
+  const { policyId } = useParams<{ policyId: string }>();
   const api = useApi();
   const [step, setStep] = useState<"template" | "configure">("template");
   const [selectedTemplate, setSelectedTemplate] = useState<PolicyTemplate | null>(null);
@@ -90,6 +91,39 @@ export default function PolicyCreate() {
   const [policyName, setPolicyName] = useState("");
   const [sensitivity, setSensitivity] = useState(4);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const isEditMode = !!policyId;
+
+  // Load policy data when editing
+  useEffect(() => {
+    if (isEditMode && policyId) {
+      setIsLoading(true);
+      api.policies.get(policyId)
+        .then((policy: any) => {
+          setPolicyName(policy.name);
+          const sensitivityLevel = parseInt(policy.sensitivity.replace("L", ""));
+          setSensitivity(sensitivityLevel);
+          
+          // Find matching template
+          const template = templates.find(t => 
+            t.guardrails.length === policy.guardrails.length &&
+            t.guardrails.every(g => policy.guardrails.includes(g))
+          );
+          
+          if (template) {
+            setSelectedTemplate(template);
+            setStep("configure");
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to load policy:", error);
+          toast.error("Failed to load policy");
+          navigate("/policies");
+        })
+        .finally(() => setIsLoading(false));
+    }
+  }, [isEditMode, policyId]);
 
   const handleSelectTemplate = (template: PolicyTemplate) => {
     setSelectedTemplate(template);
@@ -98,7 +132,7 @@ export default function PolicyCreate() {
     setStep("configure");
   };
 
-  const handleCreatePolicy = async () => {
+  const handleSavePolicy = async () => {
     if (!policyName.trim()) {
       toast.error("Please enter a policy name");
       return;
@@ -111,26 +145,38 @@ export default function PolicyCreate() {
 
     setIsSubmitting(true);
     try {
-      // Generate a unique policy ID
-      const policyId = `policy-${policyName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
-      
-      await api.policies.create({
+      const policyData = {
         name: policyName,
-        policy_id: policyId,
+        policy_id: isEditMode && policyId ? policyId : `policy-${policyName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
         guardrails: selectedTemplate.guardrails,
         sensitivity: `L${sensitivity}`,
         projects: "",
-      });
+      };
+
+      if (isEditMode && policyId) {
+        await api.policies.update(policyId, policyData);
+        toast.success("Policy updated successfully");
+      } else {
+        await api.policies.create(policyData);
+        toast.success("Policy created successfully");
+      }
       
-      toast.success("Policy created successfully");
       navigate("/policies");
     } catch (error) {
-      console.error("Error creating policy:", error);
-      toast.error("Failed to create policy");
+      console.error(`Error ${isEditMode ? 'updating' : 'creating'} policy:`, error);
+      toast.error(`Failed to ${isEditMode ? 'update' : 'create'} policy`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading policy...</p>
+      </div>
+    );
+  }
 
   if (step === "template") {
     return (
@@ -140,7 +186,7 @@ export default function PolicyCreate() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-semibold text-foreground">New policy</h1>
+            <h1 className="text-3xl font-semibold text-foreground">{isEditMode ? "Edit policy" : "New policy"}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               A policy defines the guardrails applied to all API requests in assigned projects. These guardrails will flag any detected threats based on the configured threshold.
             </p>
@@ -321,7 +367,7 @@ export default function PolicyCreate() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-semibold text-foreground">Create Policy</h1>
+          <h1 className="text-3xl font-semibold text-foreground">{isEditMode ? "Edit Policy" : "Create Policy"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Fine-tune the policy by <span className="font-semibold">adjusting the flagging sensitivity</span> to match your security and user experience needs. Adjust and validate before assigning to projects to be applied at runtime.
           </p>
@@ -437,8 +483,8 @@ export default function PolicyCreate() {
           <Button variant="outline" onClick={() => navigate("/policies")}>
             Cancel
           </Button>
-          <Button onClick={handleCreatePolicy} disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create policy"}
+          <Button onClick={handleSavePolicy} disabled={isSubmitting}>
+            {isSubmitting ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update policy" : "Create policy")}
           </Button>
         </div>
       </div>
