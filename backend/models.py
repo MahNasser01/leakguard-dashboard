@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Integer, Text, JSON, ForeignKey
+from sqlalchemy import Column, String, DateTime, Integer, Text, JSON, ForeignKey, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
@@ -23,6 +23,7 @@ class Policy(Base):
     guardrails = Column(JSON, nullable=False)
     sensitivity = Column(String, nullable=False)
     projects = Column(String)
+    is_user_added = Column(Boolean, nullable=False, default=True)
     last_edited = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class ApiKey(Base):

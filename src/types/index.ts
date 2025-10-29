@@ -14,6 +14,7 @@ export interface Policy {
   guardrails: string[];
   sensitivity: string;
   projects: string;
+  isUserAdded: boolean;
   lastEdited: Date;
 }
 

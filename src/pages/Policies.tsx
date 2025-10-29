@@ -22,9 +22,15 @@ export default function Policies() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  const filteredPolicies = policies.filter((policy) =>
-    policy.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPolicies = policies.filter((policy) => {
+    const matchesSearch = policy.name.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (activeTab === "all") return true;
+    if (activeTab === "your") return policy.isUserAdded === true;
+    if (activeTab === "catalog") return policy.isUserAdded === false;
+    return true;
+  });
 
   const handleCopyPolicyId = (policyId: string) => {
     navigator.clipboard.writeText(policyId);

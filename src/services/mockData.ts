@@ -19,6 +19,7 @@ export const mockPolicies: Policy[] = [
     guardrails: ["prompt-injection", "pii", "topics", "secrets"],
     sensitivity: "L4",
     projects: "First Project",
+    isUserAdded: true,
     lastEdited: new Date("2024-01-15"),
   },
   {
@@ -28,6 +29,7 @@ export const mockPolicies: Policy[] = [
     guardrails: ["prompt-injection", "pii"],
     sensitivity: "L2",
     projects: "-",
+    isUserAdded: true,
     lastEdited: new Date("2024-01-15"),
   },
   {
@@ -37,6 +39,7 @@ export const mockPolicies: Policy[] = [
     guardrails: ["prompt-injection", "topics", "secrets"],
     sensitivity: "L1",
     projects: "-",
+    isUserAdded: true,
     lastEdited: new Date("2024-01-15"),
   },
   {
@@ -46,6 +49,7 @@ export const mockPolicies: Policy[] = [
     guardrails: ["prompt-injection"],
     sensitivity: "L2",
     projects: "-",
+    isUserAdded: false,
     lastEdited: new Date("2024-01-15"),
   },
   {
@@ -55,6 +59,7 @@ export const mockPolicies: Policy[] = [
     guardrails: ["prompt-injection", "pii"],
     sensitivity: "L2",
     projects: "-",
+    isUserAdded: false,
     lastEdited: new Date("2024-01-15"),
   },
 ];

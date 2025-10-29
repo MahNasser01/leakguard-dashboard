@@ -24,6 +24,7 @@ class PolicyBase(BaseModel):
     guardrails: List[str]
     sensitivity: str
     projects: Optional[str] = None
+    is_user_added: bool = True
 
 class PolicyCreate(PolicyBase):
     pass
