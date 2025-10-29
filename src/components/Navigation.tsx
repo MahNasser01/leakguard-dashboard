@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Navigation = () => {
   return (
@@ -30,11 +31,11 @@ const Navigation = () => {
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-              Sign In
+            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+              <Link to="/auth">Sign In</Link>
             </Button>
-            <Button variant="heroPrimary" size="sm">
-              Get Started
+            <Button asChild variant="heroPrimary" size="sm">
+              <Link to="/auth">Get Started</Link>
             </Button>
           </div>
         </div>

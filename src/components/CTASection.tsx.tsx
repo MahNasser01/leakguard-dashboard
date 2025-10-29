@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   return (
@@ -22,9 +23,11 @@ const CTASection = () => {
                 Join leading MENA enterprises in protecting their AI infrastructure. Get started in minutes.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <Button variant="heroPrimary" size="lg" className="text-base px-8">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                <Button asChild variant="heroPrimary" size="lg" className="text-base px-8">
+                  <Link to="/auth">
+                    Start Free Trial
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
                 </Button>
                 <Button variant="hero" size="lg" className="text-base px-8">
                   Contact Sales
