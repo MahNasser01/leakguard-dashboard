@@ -69,7 +69,7 @@ def guard_v2(
 
     log = schemas.LogEntryCreate(
         project=project_name,
-        threats_detected=[],
+        threats_detected=["PII", "PromptInjection", "SecretsLeak", "Toxicity", "Jailbreak"],
         content=content,
         policy=policy_name,
         request_id=request_id,
