@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List, Optional
 import models
 import schemas
@@ -96,7 +97,11 @@ def get_policies(db: Session, skip: int = 0, limit: int = 100) -> List[models.Po
     return db.query(models.Policy).offset(skip).limit(limit).all()
 
 def get_policy(db: Session, policy_id: str) -> Optional[models.Policy]:
-    return db.query(models.Policy).filter(models.Policy.id == policy_id).first()
+    return (
+        db.query(models.Policy)
+        .filter(or_(models.Policy.id == policy_id, models.Policy.policy_id == policy_id))
+        .first()
+    )
 
 def create_policy(db: Session, policy: schemas.PolicyCreate) -> models.Policy:
     db_policy = models.Policy(**policy.model_dump())
