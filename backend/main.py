@@ -8,6 +8,8 @@ import schemas
 import crud
 from database import engine, get_db
 from auth import verify_token
+from analytics_mocks import build_mock_response
+from logs_mocks import build_mock_logs
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -170,12 +172,12 @@ def delete_api_key(
 # Log Entries endpoints
 @app.get("/api/logs", response_model=List[schemas.LogEntry])
 def list_log_entries(
-    skip: int = 0, 
-    limit: int = 100, 
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user: dict = Depends(verify_token)
 ):
-    return crud.get_log_entries(db, skip=skip, limit=limit)
+    return build_mock_logs(skip=skip, limit=limit)
 
 @app.post("/api/logs", response_model=schemas.LogEntry)
 def create_log_entry(
@@ -184,3 +186,9 @@ def create_log_entry(
     current_user: dict = Depends(verify_token)
 ):
     return crud.create_log_entry(db, log_entry)
+
+@app.get("/api/analytics", response_model=schemas.AnalyticsResponse)
+def get_analytics(
+    current_user: dict = Depends(verify_token)
+):
+    return build_mock_response()

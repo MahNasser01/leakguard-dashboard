@@ -229,7 +229,7 @@ const App = () => {
             <ThreatBadge type={example.type} />
             <span className="text-xs text-blue-600 font-medium hover:text-blue-800">Select Example</span>
           </div>
-          <p className="text-sm text-gray-700 truncate">{example.content}</p>
+          <p className="text-sm text-gray-700">{example.content}</p>
         </div>
       ))}
     </div>

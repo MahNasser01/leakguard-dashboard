@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { mockLogs } from "@/services/mockData";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -16,11 +17,62 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Filter, RefreshCw, Link as LinkIcon } from "lucide-react";
+import { Filter, RefreshCw, Link as LinkIcon, Copy } from "lucide-react";
+
+type LogEntry = {
+  id: string;
+  timestamp: string;
+  project: string;
+  threats_detected: string[];
+  content: string;
+  policy: string;
+  request_id: string;
+  latency: number;
+  region: string;
+  log_entry_metadata?: string | null;
+};
 
 export default function Logs() {
-  const [logs] = useState(mockLogs);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [updating, setUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [query, setQuery] = useState("");
+
+  const fetchLogs = useCallback(async () => {
+    setUpdating(true);
+    try {
+      const res = await fetch("http://localhost:8000/api/logs?limit=100");
+      if (!res.ok) return;
+      const data: LogEntry[] = await res.json();
+      setLogs(Array.isArray(data) ? data : []);
+    } finally {
+      setUpdating(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
+  const visibleLogs = useMemo(() => {
+    const byTab = activeTab === "threats" ? logs.filter(l => (l.threats_detected?.length ?? 0) > 0) : logs;
+    if (!query.trim()) return byTab;
+    const q = query.toLowerCase();
+    return byTab.filter(l =>
+      l.project.toLowerCase().includes(q) ||
+      l.policy.toLowerCase().includes(q) ||
+      l.request_id.toLowerCase().includes(q) ||
+      l.region.toLowerCase().includes(q) ||
+      l.content.toLowerCase().includes(q) ||
+      (l.threats_detected || []).some(t => t.toLowerCase().includes(q))
+    );
+  }, [logs, activeTab, query]);
+
+  const copy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {}
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -70,6 +122,16 @@ export default function Logs() {
           Filters
         </Button>
 
+        <div className="hidden md:block w-px h-8 bg-border" />
+
+        <div className="w-full max-w-sm">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search requests, threats, policy, region..."
+          />
+        </div>
+
         <Button variant="outline">
           <svg
             className="mr-2 h-4 w-4"
@@ -88,9 +150,9 @@ export default function Logs() {
         </Button>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Update data
+          <Button variant="outline" size="sm" onClick={fetchLogs} disabled={updating}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${updating ? "animate-spin" : ""}`} />
+            {updating ? "Updating" : "Update data"}
           </Button>
           <Button variant="ghost" size="sm">
             <LinkIcon className="h-4 w-4" />
@@ -108,22 +170,72 @@ export default function Logs() {
               <TableHead>Content</TableHead>
               <TableHead>Policy</TableHead>
               <TableHead>Request ID</TableHead>
-              <TableHead>Latency</TableHead>
+              <TableHead className="text-right">Latency</TableHead>
               <TableHead>LeakGuard Region</TableHead>
               <TableHead>Metadata tags</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell colSpan={9} className="h-64 text-center">
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <div className="text-muted-foreground">No results found</div>
-                  <Button variant="link" className="text-accent">
-                    Clear all filters ×
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
+            {updating && visibleLogs.length === 0 && (
+              Array.from({ length: 8 }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`}>
+                  <TableCell><div className="h-4 w-40 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-24 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell><div className="h-6 w-28 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-64 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-20 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-28 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell className="text-right"><div className="h-4 ml-auto w-12 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-24 rounded bg-muted animate-pulse" /></TableCell>
+                  <TableCell><div className="h-4 w-24 rounded bg-muted animate-pulse" /></TableCell>
+                </TableRow>
+              ))
+            )}
+            {visibleLogs.length === 0 && !updating ? (
+              <TableRow>
+                <TableCell colSpan={9} className="h-64 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="text-muted-foreground">No results found</div>
+                    <Button variant="link" className="text-accent">
+                      Clear all filters ×
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              visibleLogs.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                  <TableCell>{log.project}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {(log.threats_detected || []).length === 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        (log.threats_detected || []).map((t, idx) => (
+                          <Badge key={`${log.id}-threat-${idx}`} variant="destructive" className="rounded-full">
+                            {t}
+                          </Badge>
+                        ))
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-[320px] truncate" title={log.content}>{log.content}</TableCell>
+                  <TableCell>{log.policy}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs">{log.request_id}</span>
+                      <Button size="icon" variant="ghost" onClick={() => copy(log.request_id)} title="Copy request id">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">{log.latency} ms</TableCell>
+                  <TableCell>{log.region}</TableCell>
+                  <TableCell>{log.log_entry_metadata || "—"}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

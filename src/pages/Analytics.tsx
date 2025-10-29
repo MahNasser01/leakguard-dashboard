@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -11,12 +11,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-const mockData = [
+type AnalyticsPoint = { time: string; flagged: number; unflagged: number };
+type AnalyticsResponse = {
+  total_requests: number;
+  total_threats: number;
+  detection_rate: number;
+  timeseries: AnalyticsPoint[];
+};
+
+const mockData: AnalyticsPoint[] = [
   { time: "11PM", flagged: 0, unflagged: 0 },
   { time: "12AM", flagged: 0, unflagged: 0 },
 ];
 
 export default function Analytics() {
+  const [series, setSeries] = useState<AnalyticsPoint[]>(mockData);
+  const [totalRequests, setTotalRequests] = useState(0);
+  const [totalThreats, setTotalThreats] = useState(0);
+  const [detectionRate, setDetectionRate] = useState(0);
+  const [updating, setUpdating] = useState(false);
+  const detectionSeries = useMemo(() => {
+    return series.map((p) => ({
+      time: p.time,
+      rate: (p.flagged + p.unflagged) > 0 ? p.flagged / (p.flagged + p.unflagged) : 0,
+    }));
+  }, [series]);
+
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      setUpdating(true);
+      const res = await fetch("http://localhost:8000/api/analytics");
+      if (!res.ok) return;
+      const data: AnalyticsResponse = await res.json();
+      setSeries(data.timeseries || mockData);
+      setTotalRequests(data.total_requests ?? 0);
+      setTotalThreats(data.total_threats ?? 0);
+      setDetectionRate(Number.isFinite(data.detection_rate) ? data.detection_rate : 0);
+    } finally {
+      setUpdating(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
   return (
     <div className="space-y-6">
       <div>
@@ -51,9 +89,9 @@ export default function Analytics() {
         </Button>
 
         <div className="ml-auto">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Update data
+          <Button variant="outline" size="sm" onClick={fetchAnalytics} disabled={updating}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${updating ? "animate-spin" : ""}`} />
+            {updating ? "Updating" : "Update data"}
           </Button>
         </div>
       </div>
@@ -66,7 +104,7 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">0</div>
+            <div className="text-3xl font-bold">{totalRequests}</div>
           </CardContent>
         </Card>
 
@@ -77,7 +115,7 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">0</div>
+            <div className="text-3xl font-bold">{totalThreats}</div>
           </CardContent>
         </Card>
 
@@ -88,6 +126,7 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="text-3xl font-bold">{detectionRate.toFixed(2)}</div>
             <div className="text-sm text-muted-foreground">/ request</div>
           </CardContent>
         </Card>
@@ -100,26 +139,14 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mockData}>
+              <LineChart data={series}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="time" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" domain={[-1, 1]} />
+                <YAxis stroke="#6b7280" />
                 <Tooltip />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="flagged"
-                  stroke="#ef4444"
-                  name="Flagged"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="unflagged"
-                  stroke="#6b7280"
-                  name="Unflagged"
-                  strokeWidth={2}
-                />
+                <Line type="monotone" dataKey="flagged" stroke="#ef4444" name="Flagged" strokeWidth={2} />
+                <Line type="monotone" dataKey="unflagged" stroke="#6b7280" name="Unflagged" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -131,11 +158,13 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mockData}>
+              <LineChart data={series}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="time" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" domain={[0, 1]} />
+                <YAxis stroke="#6b7280" />
                 <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="flagged" stroke="#ef4444" name="Flagged" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -148,11 +177,13 @@ export default function Analytics() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={mockData}>
+            <LineChart data={detectionSeries}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="time" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" domain={[-1, 1]} />
+              <YAxis stroke="#6b7280" domain={[0, 1]} />
               <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="rate" stroke="#10b981" name="Detection rate" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

@@ -86,3 +86,16 @@ class GuardRequest(BaseModel):
     """Schema for the input prompt."""
     prompt: str
 
+
+class AnalyticsPoint(BaseModel):
+    time: str
+    flagged: int
+    unflagged: int
+
+
+class AnalyticsResponse(BaseModel):
+    total_requests: int
+    total_threats: int
+    detection_rate: float
+    timeseries: List[AnalyticsPoint]
+
