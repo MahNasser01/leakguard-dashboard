@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { mockPolicies } from "@/services/mockData";
 import { Policy } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export default function Policies() {
+  const navigate = useNavigate();
   const [policies] = useState<Policy[]>(mockPolicies);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -82,7 +84,7 @@ export default function Policies() {
           />
         </div>
 
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button onClick={() => navigate("/policies/create")} className="bg-primary hover:bg-primary/90">
           <Plus className="mr-2 h-4 w-4" />
           New policy
         </Button>

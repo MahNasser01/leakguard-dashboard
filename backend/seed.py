@@ -19,17 +19,24 @@ def seed(db: Session):
     # Policies
     policies = [
         {
-            "name": "LeakGuard Default Policy",
-            "policy_id": "policy-LeakGuard-default",
-            "guardrails": ["prompt-injection", "pii", "topics", "secrets"],
+            "name": "Lakera Default Policy",
+            "policy_id": "policy-lakera-default",
+            "guardrails": ["Prompt Defense", "Content Moderation", "Data Leakage Prevention", "Unknown Links"],
             "sensitivity": "L4",
             "projects": "First Project",
         },
         {
             "name": "Public-facing Application",
-            "policy_id": "policy-LeakGuard-public",
-            "guardrails": ["prompt-injection", "pii"],
+            "policy_id": "policy-public-facing",
+            "guardrails": ["Prompt Defense", "Content Moderation", "Data Leakage Prevention", "Unknown Links"],
             "sensitivity": "L2",
+            "projects": "-",
+        },
+        {
+            "name": "Internal-facing Application",
+            "policy_id": "policy-internal-facing",
+            "guardrails": ["Prompt Defense", "Data Leakage Prevention", "Unknown Links"],
+            "sensitivity": "L1",
             "projects": "-",
         },
     ]

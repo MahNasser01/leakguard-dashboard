@@ -10,6 +10,7 @@ import GettingStarted from "./pages/GettingStarted";
 import Analytics from "./pages/Analytics";
 import Logs from "./pages/Logs";
 import Policies from "./pages/Policies";
+import PolicyCreate from "./pages/PolicyCreate";
 import Projects from "./pages/Projects";
 import Playground from "./pages/Playground";
 import ApiAccess from "./pages/ApiAccess";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/" element={<ProtectedRoute><DashboardLayout><Index /></DashboardLayout></ProtectedRoute>} />
           <Route path="/projects" element={<ProtectedRoute><DashboardLayout><Projects /></DashboardLayout></ProtectedRoute>} />
           <Route path="/policies" element={<ProtectedRoute><DashboardLayout><Policies /></DashboardLayout></ProtectedRoute>} />
+          <Route path="/policies/create" element={<ProtectedRoute><DashboardLayout><PolicyCreate /></DashboardLayout></ProtectedRoute>} />
           <Route path="/api-access" element={<ProtectedRoute><DashboardLayout><ApiAccess /></DashboardLayout></ProtectedRoute>} />
           <Route path="/logs" element={<ProtectedRoute><DashboardLayout><Logs /></DashboardLayout></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><DashboardLayout><Analytics /></DashboardLayout></ProtectedRoute>} />
