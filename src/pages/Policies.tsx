@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockPolicies } from "@/services/mockData";
 import { Policy } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,12 +14,40 @@ import {
 import { Plus, Search, Copy, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useApi } from "@/services/api";
 
 export default function Policies() {
   const navigate = useNavigate();
-  const [policies] = useState<Policy[]>(mockPolicies);
+  const { policies: policiesApi } = useApi();
+  const [policies, setPolicies] = useState<Policy[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+
+  useEffect(() => {
+    let isMounted = true;
+    policiesApi
+      .list()
+      .then((data) => {
+        if (!isMounted) return;
+        const mapped: Policy[] = (data || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          policyId: p.policy_id,
+          guardrails: p.guardrails || [],
+          sensitivity: p.sensitivity,
+          projects: p.projects || "-",
+          isUserAdded: Boolean(p.is_user_added),
+          lastEdited: p.last_edited ? new Date(p.last_edited) : new Date(0),
+        }));
+        setPolicies(mapped);
+      })
+      .catch(() => {
+        toast.error("Failed to fetch policies");
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredPolicies = policies.filter((policy) => {
     const matchesSearch = policy.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -148,7 +175,9 @@ export default function Policies() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{policy.projects}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  Invalid date
+                  {policy.lastEdited && !isNaN(policy.lastEdited.getTime())
+                    ? policy.lastEdited.toLocaleDateString()
+                    : "-"}
                 </TableCell>
                 <TableCell>
                   <Button
