@@ -66,4 +66,31 @@ export const mockPolicies: Policy[] = [
 
 export const mockApiKeys: ApiKey[] = [];
 
-export const mockLogs: LogEntry[] = [];
+/*
+
+  id: string;
+  timestamp: Date;
+  project: string;
+  threatsDetected: string[];
+  content: string;
+  policy: string;
+  requestId: string;
+  latency: number;
+  region: string;
+  metadata: string;
+*/
+export const mockLogs: LogEntry[] = [
+  {
+    id: "1",
+    timestamp: new Date("2024-01-15"),
+    project: "First Project",
+    threatsDetected: ["prompt-injection", "pii"],
+    content: "Hello, world!",
+    policy: "LeakGuard Default Policy",
+    requestId: "request-1234",
+    latency: 500,
+    region: "us-east-1",
+    metadata: "-",
+  },
+  
+];
