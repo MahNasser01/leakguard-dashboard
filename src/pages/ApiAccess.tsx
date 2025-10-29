@@ -14,12 +14,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ApiAccess() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>(mockApiKeys);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const API_BASE = (import.meta as any).env.VITE_API_BASE || "http://localhost:8000";
+  const [playgroundKey, setPlaygroundKey] = useState("");
+  const [playgroundPrompt, setPlaygroundPrompt] = useState("Hello, world!");
+  const [playgroundLoading, setPlaygroundLoading] = useState(false);
+  const [playgroundResult, setPlaygroundResult] = useState<any>(null);
 
   const handleCreateApiKey = () => {
     if (!newKeyName) {
@@ -191,6 +196,73 @@ curl https://api.leakguard.ai/v2/guard <first_request_arguments> \\
               </a>
               .
             </p>
+          </div>
+
+          <div className="space-y-3 rounded-lg border bg-card p-4">
+            <h2 className="text-lg font-semibold">Playground</h2>
+            <div className="space-y-2">
+              <Label htmlFor="pg-key">API key</Label>
+              <Input
+                id="pg-key"
+                placeholder="lk_..."
+                value={playgroundKey}
+                onChange={(e) => setPlaygroundKey(e.target.value)}
+              />
+              <div className="text-xs text-muted-foreground">
+                Leave empty to use your first saved key.
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pg-prompt">Prompt</Label>
+              <Textarea
+                id="pg-prompt"
+                value={playgroundPrompt}
+                onChange={(e) => setPlaygroundPrompt(e.target.value)}
+                rows={5}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={playgroundLoading}
+                onClick={() => {
+                  const key = playgroundKey || apiKeys[0]?.key;
+                  if (!key) {
+                    toast.error("No API key available");
+                    return;
+                  }
+                  setPlaygroundLoading(true);
+                  setPlaygroundResult(null);
+                  fetch(`${API_BASE}/v2/guard`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${key}`,
+                    },
+                    body: JSON.stringify({
+                      messages: [{ content: playgroundPrompt, role: "user" }],
+                    }),
+                  })
+                    .then(async (res) => {
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data?.detail || "Request failed");
+                      setPlaygroundResult(data);
+                      toast.success("Request successful");
+                    })
+                    .catch((err) => {
+                      setPlaygroundResult({ error: String(err.message || err) });
+                      toast.error("Request failed");
+                    })
+                    .finally(() => setPlaygroundLoading(false));
+                }}
+              >
+                {playgroundLoading ? "Running..." : "Run"}
+              </Button>
+            </div>
+            {playgroundResult && (
+              <pre className="rounded-lg bg-muted p-4 text-xs overflow-x-auto">
+                <code>{JSON.stringify(playgroundResult, null, 2)}</code>
+              </pre>
+            )}
           </div>
         </div>
 

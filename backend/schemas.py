@@ -88,6 +88,15 @@ class GuardRequest(BaseModel):
     prompt: str
 
 
+class GuardV2Message(BaseModel):
+    role: str
+    content: str
+
+
+class GuardV2Request(BaseModel):
+    messages: List[GuardV2Message]
+
+
 class AnalyticsPoint(BaseModel):
     time: str
     flagged: int
