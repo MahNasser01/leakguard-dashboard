@@ -7,6 +7,9 @@ class ProjectBase(BaseModel):
     project_id: str
     policy: str
     project_metadata: Optional[str] = None
+    is_public: Optional[bool] = False
+    proxy_slug: Optional[str] = None
+    supported_llms: Optional[List[str]] = None
 
 class ProjectCreate(ProjectBase):
     pass
@@ -17,6 +20,11 @@ class Project(ProjectBase):
 
     class Config:
         from_attributes = True
+
+class ProjectProxyUpdate(BaseModel):
+    is_public: bool
+    proxy_slug: Optional[str] = None
+    supported_llms: Optional[List[str]] = None
 
 class PolicyBase(BaseModel):
     name: str
@@ -108,4 +116,21 @@ class AnalyticsResponse(BaseModel):
     total_threats: int
     detection_rate: float
     timeseries: List[AnalyticsPoint]
+
+
+class LLMChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class LLMChatRequest(BaseModel):
+    model: str
+    messages: List[LLMChatMessage]
+
+
+class LLMChatResponse(BaseModel):
+    id: str
+    model: str
+    choices: List[dict]
+    usage: dict
 

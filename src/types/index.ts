@@ -5,6 +5,9 @@ export interface Project {
   policy: string;
   metadata?: string;
   createdAt: Date;
+  isPublic?: boolean;
+  proxySlug?: string;
+  supportedLlms?: string[];
 }
 
 export interface Policy {
@@ -37,4 +40,38 @@ export interface LogEntry {
   latency: number;
   region: string;
   metadata: string;
+}
+
+export interface ProjectProxyConfig {
+  isPublic: boolean;
+  proxySlug?: string;
+  supportedLlms?: string[];
+}
+
+export interface LLMChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface LLMChatRequest {
+  model: string;
+  messages: LLMChatMessage[];
+}
+
+export interface LLMChatResponse {
+  id: string;
+  model: string;
+  choices: Array<{
+    index: number;
+    message: {
+      role: string;
+      content: string;
+    };
+    finish_reason: string;
+  }>;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }

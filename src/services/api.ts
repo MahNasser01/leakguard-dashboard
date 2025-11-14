@@ -15,6 +15,15 @@ export interface ProjectCreateData {
   project_id: string;
   policy: string;
   project_metadata?: string;
+  is_public?: boolean;
+  proxy_slug?: string;
+  supported_llms?: string[];
+}
+
+export interface ProjectProxyUpdateData {
+  is_public: boolean;
+  proxy_slug?: string;
+  supported_llms?: string[];
 }
 
 export interface ApiKeyCreateData {
@@ -170,3 +179,41 @@ export function useApi() {
     },
   };
 }
+
+// Proxy API functions (some don't require auth)
+export const proxyApi = {
+  async getPublicProxy(slug: string) {
+    const response = await fetch(`${API_BASE_URL}/api/proxy/${slug}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch proxy: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  async updateProjectProxy(projectId: string, data: ProjectProxyUpdateData, getToken: () => Promise<string | null>) {
+    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}/proxy`, {
+      method: "PUT",
+      headers: await getAuthHeaders(getToken),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to update proxy settings: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  async chat(slug: string, model: string, messages: Array<{ role: string; content: string }>) {
+    const response = await fetch(`${API_BASE_URL}/api/proxy/${slug}/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ model, messages }),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new Error(error.detail || `Failed to send chat message: ${response.statusText}`);
+    }
+    return response.json();
+  },
+};

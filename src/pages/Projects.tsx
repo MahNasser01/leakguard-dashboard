@@ -20,8 +20,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Copy } from "lucide-react";
+import { Plus, Search, Copy, Settings, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@clerk/clerk-react";
+import { proxyApi } from "@/services/api";
 
 // Define constants for pagination
 const DEFAULT_ITEMS_PER_PAGE = 25;
@@ -73,6 +77,21 @@ export default function Projects() {
     application: "",
     model: "",
   });
+  const [proxyDialogOpen, setProxyDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [proxyConfig, setProxyConfig] = useState({
+    isPublic: false,
+    proxySlug: "",
+    supportedLlms: [] as string[],
+  });
+  const { getToken } = useAuth();
+
+  const AVAILABLE_LLMS = [
+    "gpt-4",
+    "gpt-3.5-turbo",
+    "gemini-pro",
+    "claude-3-opus",
+  ];
 
   // --- Pagination State ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -186,6 +205,9 @@ export default function Projects() {
           policy: d.policy,
           metadata: d.project_metadata || d.metadata || "-",
           createdAt: d.created_at ? new Date(d.created_at) : new Date(),
+          isPublic: d.is_public || false,
+          proxySlug: d.proxy_slug,
+          supportedLlms: d.supported_llms || [],
         }));
         setProjects(mapped);
       })
@@ -204,6 +226,77 @@ export default function Projects() {
   const handleCopyProjectId = (projectId: string) => {
     navigator.clipboard.writeText(projectId);
     toast.success("Project ID copied to clipboard");
+  };
+
+  const handleOpenProxyDialog = (project: Project) => {
+    setSelectedProject(project);
+    setProxyConfig({
+      isPublic: project.isPublic || false,
+      proxySlug: project.proxySlug || "",
+      supportedLlms: project.supportedLlms || [],
+    });
+    setProxyDialogOpen(true);
+  };
+
+  const handleSaveProxyConfig = async () => {
+    if (!selectedProject) return;
+
+    if (proxyConfig.isPublic && !proxyConfig.proxySlug) {
+      toast.error("Proxy slug is required when making proxy public");
+      return;
+    }
+
+    if (proxyConfig.isPublic && proxyConfig.supportedLlms.length === 0) {
+      toast.error("At least one LLM must be selected when making proxy public");
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      await proxyApi.updateProjectProxy(
+        selectedProject.id,
+        {
+          is_public: proxyConfig.isPublic,
+          proxy_slug: proxyConfig.proxySlug || undefined,
+          supported_llms: proxyConfig.supportedLlms.length > 0 ? proxyConfig.supportedLlms : undefined,
+        },
+        () => Promise.resolve(token)
+      );
+
+      // Update local state
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === selectedProject.id
+            ? {
+                ...p,
+                isPublic: proxyConfig.isPublic,
+                proxySlug: proxyConfig.proxySlug,
+                supportedLlms: proxyConfig.supportedLlms,
+              }
+            : p
+        )
+      );
+
+      toast.success("Proxy settings updated successfully");
+      setProxyDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update proxy settings");
+    }
+  };
+
+  const handleCopyProxyLink = (slug: string) => {
+    const link = `${window.location.origin}/proxy/${slug}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Proxy link copied to clipboard");
+  };
+
+  const toggleLLM = (llm: string) => {
+    setProxyConfig((prev) => ({
+      ...prev,
+      supportedLlms: prev.supportedLlms.includes(llm)
+        ? prev.supportedLlms.filter((l) => l !== llm)
+        : [...prev.supportedLlms, llm],
+    }));
   };
 
   return (
@@ -304,12 +397,13 @@ export default function Projects() {
               <TableHead>Project ID</TableHead>
               <TableHead>Policy</TableHead>
               <TableHead>Metadata</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedProjects.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-64 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="h-64 text-center text-muted-foreground">
                   No projects found
                 </TableCell>
               </TableRow>
@@ -339,6 +433,29 @@ export default function Projects() {
                   </TableCell>
                   {/* --- END UPDATED --- */}
                   <TableCell className="text-muted-foreground">{project.metadata}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenProxyDialog(project)}
+                        className="h-8"
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Proxy
+                      </Button>
+                      {project.isPublic && project.proxySlug && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopyProxyLink(project.proxySlug!)}
+                          className="h-8"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -401,6 +518,93 @@ export default function Projects() {
 
       </div>
       {/* --- END: Pagination Bar --- */}
+
+      {/* Proxy Configuration Dialog */}
+      <Dialog open={proxyDialogOpen} onOpenChange={setProxyDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Configure Proxy Interface</DialogTitle>
+            <DialogDescription>
+              Make this project's LLM interface publicly accessible. Users will need to login with Google via Clerk to access it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="is-public">Make Proxy Public</Label>
+                <p className="text-sm text-muted-foreground">
+                  Enable public access to this project's LLM interface
+                </p>
+              </div>
+              <Switch
+                id="is-public"
+                checked={proxyConfig.isPublic}
+                onCheckedChange={(checked) =>
+                  setProxyConfig({ ...proxyConfig, isPublic: checked })
+                }
+              />
+            </div>
+
+            {proxyConfig.isPublic && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="proxy-slug">Proxy Slug *</Label>
+                  <Input
+                    id="proxy-slug"
+                    placeholder="my-project-proxy"
+                    value={proxyConfig.proxySlug}
+                    onChange={(e) =>
+                      setProxyConfig({ ...proxyConfig, proxySlug: e.target.value })
+                    }
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Unique identifier for the public proxy link. Only lowercase letters, numbers, and hyphens.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Supported LLMs *</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {AVAILABLE_LLMS.map((llm) => (
+                      <div key={llm} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={llm}
+                          checked={proxyConfig.supportedLlms.includes(llm)}
+                          onCheckedChange={() => toggleLLM(llm)}
+                        />
+                        <Label
+                          htmlFor={llm}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {llm}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Select which LLM models users can access through this proxy
+                  </p>
+                </div>
+
+                {proxyConfig.proxySlug && (
+                  <div className="rounded-lg border bg-muted p-3">
+                    <p className="text-sm font-medium mb-1">Public Proxy Link:</p>
+                    <p className="text-sm text-muted-foreground break-all">
+                      {window.location.origin}/proxy/{proxyConfig.proxySlug}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setProxyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProxyConfig}>Save Settings</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

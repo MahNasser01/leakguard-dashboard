@@ -253,3 +253,117 @@ def get_analytics(
     current_user: dict = Depends(verify_token)
 ):
     return build_mock_response()
+
+
+# Proxy endpoints
+@app.put("/api/projects/{project_id}/proxy", response_model=schemas.Project)
+def update_project_proxy(
+    project_id: str,
+    proxy_update: schemas.ProjectProxyUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(verify_token)
+):
+    """Update proxy settings for a project (admin only)"""
+    db_project = crud.update_project_proxy_settings(db, project_id, proxy_update)
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return db_project
+
+
+@app.get("/api/proxy/{slug}", response_model=schemas.Project)
+def get_public_proxy(
+    slug: str,
+    db: Session = Depends(get_db)
+):
+    """Get public proxy configuration by slug (no auth required)"""
+    db_project = crud.get_project_by_slug(db, slug)
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Proxy not found")
+    if not db_project.is_public:
+        raise HTTPException(status_code=403, detail="Proxy is not public")
+    return db_project
+
+
+@app.post("/api/proxy/{slug}/chat", response_model=schemas.LLMChatResponse)
+def llm_chat(
+    slug: str,
+    request: schemas.LLMChatRequest,
+    db: Session = Depends(get_db)
+):
+    """Mock LLM chat endpoint (no auth required, but project must be public)"""
+    import random
+    import uuid
+    
+    db_project = crud.get_project_by_slug(db, slug)
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Proxy not found")
+    if not db_project.is_public:
+        raise HTTPException(status_code=403, detail="Proxy is not public")
+    
+    # Check if model is supported
+    supported_models = db_project.supported_llms or []
+    if request.model not in supported_models:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Model {request.model} is not supported. Supported models: {', '.join(supported_models)}"
+        )
+    
+    # Get the last user message
+    user_messages = [msg for msg in request.messages if msg.role == "user"]
+    if not user_messages:
+        raise HTTPException(status_code=400, detail="No user message found")
+    
+    user_prompt = user_messages[-1].content
+    
+    # Generate mock response based on model
+    mock_responses = {
+        "gpt-4": [
+            f"Based on your question about '{user_prompt[:50]}...', I can provide a comprehensive answer. This is a simulated GPT-4 response that demonstrates the capabilities of our platform.",
+            f"Here's a thoughtful response to your query: {user_prompt[:30]}... The answer involves multiple considerations and factors that are important to understand.",
+            f"As an AI assistant, I understand you're asking about '{user_prompt[:40]}...'. Let me break this down into key points for you."
+        ],
+        "gpt-3.5-turbo": [
+            f"Sure! Regarding '{user_prompt[:50]}...', here's what I think: This is a GPT-3.5 Turbo style response that's concise and helpful.",
+            f"I can help with that! Your question about '{user_prompt[:40]}...' is interesting. Here's a straightforward answer.",
+            f"Thanks for asking about '{user_prompt[:30]}...'. This is a simulated response from GPT-3.5 Turbo."
+        ],
+        "gemini-pro": [
+            f"Great question about '{user_prompt[:50]}...'! From a Gemini perspective, I'd like to explore this topic with you. Here's my analysis.",
+            f"Regarding '{user_prompt[:40]}...', Gemini would approach this differently. Let me share some insights.",
+            f"Your query about '{user_prompt[:30]}...' is fascinating. As Gemini, I'd like to provide a multi-faceted response."
+        ],
+        "claude-3-opus": [
+            f"Thank you for your thoughtful question about '{user_prompt[:50]}...'. As Claude, I appreciate the nuance in your inquiry. Here's my perspective.",
+            f"Regarding '{user_prompt[:40]}...', I'd like to think through this carefully. Claude's approach emphasizes clarity and thoroughness.",
+            f"Your question about '{user_prompt[:30]}...' deserves a comprehensive answer. Let me provide Claude's characteristic detailed response."
+        ]
+    }
+    
+    # Get model-specific responses or use default
+    model_responses = mock_responses.get(request.model, mock_responses["gpt-4"])
+    response_content = random.choice(model_responses)
+    
+    # Simulate some randomness in token usage
+    prompt_tokens = len(user_prompt.split()) * 1.3  # Rough estimate
+    completion_tokens = len(response_content.split()) * 1.3
+    total_tokens = int(prompt_tokens + completion_tokens)
+    
+    return {
+        "id": f"chatcmpl-{uuid.uuid4().hex[:29]}",
+        "model": request.model,
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": response_content
+                },
+                "finish_reason": "stop"
+            }
+        ],
+        "usage": {
+            "prompt_tokens": int(prompt_tokens),
+            "completion_tokens": int(completion_tokens),
+            "total_tokens": total_tokens
+        }
+    }

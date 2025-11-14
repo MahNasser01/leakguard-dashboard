@@ -66,6 +66,9 @@ def get_projects(db: Session, skip: int = 0, limit: int = 100) -> List[models.Pr
 def get_project(db: Session, project_id: str) -> Optional[models.Project]:
     return db.query(models.Project).filter(models.Project.id == project_id).first()
 
+def get_project_by_slug(db: Session, slug: str) -> Optional[models.Project]:
+    return db.query(models.Project).filter(models.Project.proxy_slug == slug).first()
+
 def create_project(db: Session, project: schemas.ProjectCreate) -> models.Project:
     db_project = models.Project(**project.model_dump())
     db.add(db_project)
@@ -188,3 +191,14 @@ def touch_api_key_last_used(db: Session, api_key: models.ApiKey) -> None:
     api_key.last_used = datetime.now(timezone.utc)
     db.add(api_key)
     db.commit()
+
+
+def update_project_proxy_settings(db: Session, project_id: str, proxy_update: schemas.ProjectProxyUpdate) -> Optional[models.Project]:
+    db_project = get_project(db, project_id)
+    if db_project:
+        db_project.is_public = proxy_update.is_public
+        db_project.proxy_slug = proxy_update.proxy_slug
+        db_project.supported_llms = proxy_update.supported_llms or []
+        db.commit()
+        db.refresh(db_project)
+    return db_project

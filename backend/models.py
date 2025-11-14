@@ -13,6 +13,9 @@ class Project(Base):
     policy = Column(String, nullable=False)
     project_metadata = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_public = Column(Boolean, nullable=False, default=False)
+    proxy_slug = Column(String, unique=True, nullable=True)
+    supported_llms = Column(JSON, nullable=True, default=list)
 
 class Policy(Base):
     __tablename__ = "policies"
