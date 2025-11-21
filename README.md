@@ -71,3 +71,58 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Docker Deployment
+
+This project can be easily deployed using Docker and Docker Compose for easier migration and deployment.
+
+### Prerequisites
+
+- Docker (version 20.10 or later)
+- Docker Compose (version 2.0 or later)
+
+### Quick Start
+
+1. **Build and start all services:**
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Access the application:**
+   - Frontend: http://localhost:8080
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+### Environment Variables
+
+Create a `.env` file in the project root (optional) to customize settings:
+
+```env
+# Backend API URL (used when building frontend)
+VITE_API_URL=http://localhost:8000
+
+# Backend environment variables
+DISABLE_AUTH=false
+CLERK_SECRET_KEY=your_clerk_secret_key_here
+```
+
+### Docker Commands
+
+- **Start services:** `docker-compose up -d`
+- **Stop services:** `docker-compose down`
+- **View logs:** `docker-compose logs -f`
+- **Rebuild after changes:** `docker-compose up -d --build`
+- **Stop and remove volumes:** `docker-compose down -v`
+
+### Database Persistence
+
+The SQLite database (`leakguard.db`) is persisted in the `backend/` directory via a volume mount. This ensures your data survives container restarts.
+
+### Development with Docker
+
+For development, you can still run services locally:
+
+- **Frontend (local):** `npm run dev`
+- **Backend (local):** `cd backend && uvicorn main:app --reload --host 0.0.0.0 --port 8000`
+
+Or use Docker for a consistent environment across different machines.

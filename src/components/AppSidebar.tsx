@@ -10,6 +10,8 @@ import {
   DollarSign,
   Settings,
   BookOpen,
+  Users,
+  Trophy,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +32,8 @@ const mainItems = [
   { title: "Logs", url: "/logs", icon: FileText },
   { title: "Policies", url: "/policies", icon: Shield },
   { title: "Projects", url: "/projects", icon: FolderKanban },
+  { title: "Team", url: "/users", icon: Users },
+  { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
   { title: "Playground", url: "/playground", icon: PlaySquare },
   { title: "API Access", url: "/api-access", icon: Key },
   { title: "Pricing", url: "/pricing", icon: DollarSign },
